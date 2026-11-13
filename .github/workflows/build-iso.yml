@@ -15,10 +15,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: arya-os-iso-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -41,40 +37,13 @@ jobs:
           test -s "$SCRIPT"
           echo "Patching live-build kernel selector: $SCRIPT"
 
-          sudo python3 - "$SCRIPT" <<'PY'
-          from pathlib import Path
-          import sys
+          sudo sed -i \
+            -e 's#${LB_PARENT_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_PARENT_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
+            -e 's#${LB_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
+            "$SCRIPT"
 
-          path = Path(sys.argv[1])
-          source = path.read_text()
-          variables = ("LB_PARENT_DISTRIBUTION", "LB_DISTRIBUTION")
-          total = 0
-          for variable in variables:
-              old = f"${{{variable}}}/Contents-${{LB_ARCHITECTURES}}.gz"
-              new = f"${{{variable}}}/main/Contents-${{LB_ARCHITECTURES}}.gz"
-              count = source.count(old)
-              if count:
-                  source = source.replace(old, new)
-                  total += count
-
-          if total:
-              path.write_text(source)
-
-          verified = sum(
-              path.read_text().count(
-                  f"${{{variable}}}/main/Contents-${{LB_ARCHITECTURES}}.gz"
-              )
-              for variable in variables
-          )
-          if verified < 1:
-              raise SystemExit(
-                  f"No corrected Debian component Contents URL found in {path}"
-              )
-
-          print(f"Verified {verified} corrected Contents index URL(s).")
-          PY
-
-          sudo grep -n 'main/Contents-${LB_ARCHITECTURES}.gz' "$SCRIPT"
+          grep -n 'main/Contents-${LB_ARCHITECTURES}.gz' "$SCRIPT"
+          grep -q 'main/Contents-${LB_ARCHITECTURES}.gz' "$SCRIPT"
 
       - name: Configure Arya OS with the Debian Live Installer
         run: |
