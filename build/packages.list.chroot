@@ -1,0 +1,21 @@
+# Lightweight desktop and essential system tools
+live-task-xfce
+network-manager
+network-manager-gnome
+wpasupplicant
+sudo
+curl
+wget
+ca-certificates
+pciutils
+usbutils
+lshw
+mesa-utils
+xserver-xorg-video-intel
+firmware-linux
+firmware-misc-nonfree
+firmware-intel-graphics
+firmware-b43-installer
+alsa-utils
+pavucontrol
+firefox-esr
