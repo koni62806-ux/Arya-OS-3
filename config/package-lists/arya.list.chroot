@@ -1,4 +1,5 @@
 # Lightweight XFCE desktop and essential system tools
+linux-image-amd64
 live-task-xfce
 network-manager
 network-manager-gnome
