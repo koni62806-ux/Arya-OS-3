@@ -8,6 +8,7 @@ lb config noauto \
   --binary-image iso-hybrid \
   --debian-installer false \
   --archive-areas "main contrib non-free non-free-firmware" \
+  --security false \
   --apt-recommends true \
   --bootappend-live "boot=live components hostname=arya-os username=arya locales=en_US.UTF-8 keyboard-layouts=us" \
   --iso-application "Arya OS" \
