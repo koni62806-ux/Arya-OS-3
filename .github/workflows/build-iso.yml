@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            cpio debootstrap xorriso squashfs-tools isolinux syslinux-common wget ca-certificates
+            cpio debootstrap debian-archive-keyring xorriso squashfs-tools isolinux syslinux-common wget ca-certificates
 
           # Ubuntu 24.04 ships an obsolete live-build 3.0~a57 helper that
           # still requests removed installer packages (lilo, grub, 2.6 kernel).
@@ -42,6 +42,7 @@ jobs:
 
           VERSION="$(dpkg-query -W -f='${Version}' live-build)"
           test "${VERSION}" = "1:20250505+deb13u1"
+          test -s /usr/share/keyrings/debian-archive-keyring.gpg
           lb --version
 
       - name: Configure Arya OS with the Debian Live Installer
