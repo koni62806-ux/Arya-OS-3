@@ -23,48 +23,26 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Install live-build and BIOS bootloader dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools isolinux syslinux-common
-
-      - name: Patch Debian Trixie Contents index URLs in live-build
+      - name: Install Debian Trixie live-build and BIOS bootloader dependencies
         shell: bash
         run: |
           set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cpio debootstrap xorriso squashfs-tools isolinux syslinux-common wget ca-certificates
 
-          # Debian publishes Contents indexes below the component directory
-          # (for example, dists/trixie/main/Contents-amd64.gz). Some live-build
-          # helper scripts from Ubuntu's package still request the obsolete
-          # suite-root URL. Patch every installed helper, not only the kernel
-          # selector, because live-build invokes more than one helper.
-          mapfile -t SCRIPTS < <(
-            grep -RIl --include='*' 'Contents-${LB_ARCHITECTURES}.gz' \
-              /usr/lib/live/build /usr/share/live/build 2>/dev/null || true
-          )
-          if [ "${#SCRIPTS[@]}" -eq 0 ]; then
-            echo "No live-build helper containing a Contents index URL was found" >&2
-            exit 1
-          fi
+          # Ubuntu 24.04 ships an obsolete live-build 3.0~a57 helper that
+          # still requests removed installer packages (lilo, grub, 2.6 kernel).
+          # Use Debian Trixie's maintained live-build, which includes the
+          # installer_debian-installer Trixie fixes.
+          DEB="live-build_20250505+deb13u1_all.deb"
+          wget -q "https://deb.debian.org/debian/pool/main/l/live-build/${DEB}" -O "${DEB}"
+          echo "58e09779881cbcc631c49ceb703413e0247a87db01823e597b2a1c40a2afd8f4  ${DEB}" | sha256sum --check
+          sudo apt-get install -y --no-install-recommends "./${DEB}"
 
-          for script in "${SCRIPTS[@]}"; do
-            sudo sed -i \
-              -e 's#${LB_PARENT_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_PARENT_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
-              -e 's#${LB_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
-              "$script"
-          done
-
-          echo "Patched Contents index references:"
-          grep -RIn --include='*' 'Contents-${LB_ARCHITECTURES}.gz' \
-            /usr/lib/live/build /usr/share/live/build 2>/dev/null || true
-
-          # Fail early if any helper still contains the known obsolete forms.
-          if grep -RInE --include='*' \
-            '\$\{(LB_PARENT_DISTRIBUTION|LB_DISTRIBUTION)\}/Contents-\$\{LB_ARCHITECTURES\}\.gz' \
-            /usr/lib/live/build /usr/share/live/build 2>/dev/null; then
-            echo "An obsolete suite-root Contents URL remains in live-build" >&2
-            exit 1
-          fi
+          VERSION="$(dpkg-query -W -f='${Version}' live-build)"
+          test "${VERSION}" = "1:20250505+deb13u1"
+          lb --version
 
       - name: Configure Arya OS with the Debian Live Installer
         run: |
