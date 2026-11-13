@@ -1,6 +1,6 @@
 # Arya OS: lightweight XFCE live desktop for legacy amd64 hardware
+# Kernel is selected and installed by live-build via --linux-packages linux-image.
 # Recommends are disabled globally; required live-session components are explicit.
-linux-image-amd64
 live-task-xfce
 live-boot
 live-config

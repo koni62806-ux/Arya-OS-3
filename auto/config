@@ -8,7 +8,7 @@ lb config noauto \
   --binary-image iso-hybrid \
   --debian-installer false \
   --linux-flavours amd64 \
-  --linux-packages none \
+  --linux-packages linux-image \
   --initsystem systemd \
   --security false \
   --archive-areas "main contrib non-free non-free-firmware" \
