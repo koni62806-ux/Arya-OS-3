@@ -28,6 +28,9 @@ jobs:
       - name: Configure Arya OS from project settings
         run: sudo sh auto/config
 
+      - name: Prepare executable build hooks
+        run: sudo chmod +x config/hooks/normal/*.hook.chroot
+
       - name: Build hybrid ISO
         run: sudo lb build
 
