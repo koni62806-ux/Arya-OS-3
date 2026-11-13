@@ -28,22 +28,43 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y live-build debootstrap xorriso squashfs-tools isolinux syslinux-common
 
-      - name: Patch Debian Trixie kernel index URL in live-build
+      - name: Patch Debian Trixie Contents index URLs in live-build
         shell: bash
         run: |
           set -euo pipefail
-          SCRIPT="$(dpkg -L live-build | grep -E '/(lb_)?chroot_linux-image$' | head -n 1)"
-          test -n "$SCRIPT"
-          test -s "$SCRIPT"
-          echo "Patching live-build kernel selector: $SCRIPT"
 
-          sudo sed -i \
-            -e 's#${LB_PARENT_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_PARENT_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
-            -e 's#${LB_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
-            "$SCRIPT"
+          # Debian publishes Contents indexes below the component directory
+          # (for example, dists/trixie/main/Contents-amd64.gz). Some live-build
+          # helper scripts from Ubuntu's package still request the obsolete
+          # suite-root URL. Patch every installed helper, not only the kernel
+          # selector, because live-build invokes more than one helper.
+          mapfile -t SCRIPTS < <(
+            grep -RIl --include='*' 'Contents-${LB_ARCHITECTURES}.gz' \
+              /usr/lib/live/build /usr/share/live/build 2>/dev/null || true
+          )
+          if [ "${#SCRIPTS[@]}" -eq 0 ]; then
+            echo "No live-build helper containing a Contents index URL was found" >&2
+            exit 1
+          fi
 
-          grep -n 'main/Contents-${LB_ARCHITECTURES}.gz' "$SCRIPT"
-          grep -q 'main/Contents-${LB_ARCHITECTURES}.gz' "$SCRIPT"
+          for script in "${SCRIPTS[@]}"; do
+            sudo sed -i \
+              -e 's#${LB_PARENT_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_PARENT_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
+              -e 's#${LB_DISTRIBUTION}/Contents-${LB_ARCHITECTURES}.gz#${LB_DISTRIBUTION}/main/Contents-${LB_ARCHITECTURES}.gz#g' \
+              "$script"
+          done
+
+          echo "Patched Contents index references:"
+          grep -RIn --include='*' 'Contents-${LB_ARCHITECTURES}.gz' \
+            /usr/lib/live/build /usr/share/live/build 2>/dev/null || true
+
+          # Fail early if any helper still contains the known obsolete forms.
+          if grep -RInE --include='*' \
+            '\$\{(LB_PARENT_DISTRIBUTION|LB_DISTRIBUTION)\}/Contents-\$\{LB_ARCHITECTURES\}\.gz' \
+            /usr/lib/live/build /usr/share/live/build 2>/dev/null; then
+            echo "An obsolete suite-root Contents URL remains in live-build" >&2
+            exit 1
+          fi
 
       - name: Configure Arya OS with the Debian Live Installer
         run: |
