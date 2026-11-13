@@ -46,9 +46,9 @@ jobs:
           while IFS= read -r module; do
             sudo install -m 0644 "$module" "/root/isolinux/$(basename "$module")"
           done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\.c32$' || true)
-          ls -lh /root/isolinux/
-          test -s /root/isolinux/isolinux.bin
-          test -s /root/isolinux/vesamenu.c32
+          sudo ls -lh /root/isolinux/
+          sudo test -s /root/isolinux/isolinux.bin
+          sudo test -s /root/isolinux/vesamenu.c32
 
       - name: Build hybrid ISO
         run: sudo lb build
