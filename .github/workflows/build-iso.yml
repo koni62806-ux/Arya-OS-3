@@ -1,0 +1,47 @@
+name: Build Arya OS ISO
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "auto/**"
+      - "build/**"
+      - ".github/workflows/build-iso.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install live-build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools
+
+      - name: Configure Arya OS
+        run: sudo lb config
+
+      - name: Build hybrid ISO
+        run: sudo lb build
+
+      - name: Find generated ISO
+        id: iso
+        run: |
+          ISO="$(find . -maxdepth 1 -type f -name '*.iso' -print -quit)"
+          test -n "$ISO"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+          ls -lh "$ISO"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-iso
+          path: ${{ steps.iso.outputs.path }}
+          if-no-files-found: error
+          retention-days: 7
