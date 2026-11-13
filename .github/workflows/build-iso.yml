@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SCRIPT="$(dpkg -L live-build | grep -E '/(lb_)?chroot_linux-image
+          SCRIPT="$(dpkg -L live-build | grep -E '/(lb_)?chroot_linux-image$' | head -n 1)"
           test -n "$SCRIPT"
           test -s "$SCRIPT"
           echo "Patching live-build kernel selector: $SCRIPT"
