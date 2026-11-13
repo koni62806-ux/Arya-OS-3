@@ -8,6 +8,7 @@ lb config noauto \
   --binary-image iso-hybrid \
   --debian-installer false \
   --linux-flavours amd64 \
+  --linux-packages none \
   --mirror-chroot-security https://security.debian.org/debian-security/ \
   --archive-areas "main contrib non-free non-free-firmware" \
   --apt-recommends true \
