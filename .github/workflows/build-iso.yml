@@ -21,10 +21,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Install live-build dependencies
+      - name: Install live-build and BIOS bootloader dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools
+          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools isolinux syslinux-common
 
       - name: Configure Arya OS from project settings
         run: sudo sh auto/config
@@ -33,11 +33,23 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          THEME_SOURCE="/usr/share/live/build/bootloaders/isolinux"
-          test -s "$THEME_SOURCE/isolinux.bin"
-          test -s "$THEME_SOURCE/vesamenu.c32"
+          THEME_SOURCE="$(dpkg -L live-build | sed -n 's#/isolinux.cfg$##p' | head -n 1)"
+          test -n "$THEME_SOURCE"
+          test -s "$THEME_SOURCE/isolinux.cfg"
           install -d config/bootloaders/isolinux
           cp -a "$THEME_SOURCE/." config/bootloaders/isolinux/
+
+          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 '/isolinux\.bin$')"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+
+          while IFS= read -r module; do
+            install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\.c32$')
+
           test -s config/bootloaders/isolinux/isolinux.bin
           test -s config/bootloaders/isolinux/vesamenu.c32
           find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\n' | sort
