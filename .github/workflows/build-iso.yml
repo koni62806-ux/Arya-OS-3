@@ -41,14 +41,20 @@ jobs:
           test -s "$ISOLINUX_BIN"
           test -s "$VESAMENU"
           sudo install -d /root/isolinux
+          sudo install -d config/includes.chroot/root/isolinux
           sudo install -m 0644 "$ISOLINUX_BIN" /root/isolinux/isolinux.bin
           sudo install -m 0644 "$VESAMENU" /root/isolinux/vesamenu.c32
+          sudo install -m 0644 "$ISOLINUX_BIN" config/includes.chroot/root/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/includes.chroot/root/isolinux/vesamenu.c32
           while IFS= read -r module; do
             sudo install -m 0644 "$module" "/root/isolinux/$(basename "$module")"
+            sudo install -m 0644 "$module" "config/includes.chroot/root/isolinux/$(basename "$module")"
           done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\.c32$' || true)
           sudo ls -lh /root/isolinux/
           sudo test -s /root/isolinux/isolinux.bin
           sudo test -s /root/isolinux/vesamenu.c32
+          test -s config/includes.chroot/root/isolinux/isolinux.bin
+          test -s config/includes.chroot/root/isolinux/vesamenu.c32
 
       - name: Build hybrid ISO
         run: sudo lb build
