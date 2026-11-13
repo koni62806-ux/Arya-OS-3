@@ -1,11 +1,28 @@
 #!/bin/sh
 set -e
 
-# Debian Trixie moved Syslinux BIOS modules under /usr/lib/syslinux/modules/bios.
-# live-build's legacy isolinux staging expects them under /lib/syslinux.
-mkdir -p /lib/syslinux
-ln -sf /usr/lib/ISOLINUX/isolinux.bin /lib/syslinux/isolinux.bin
+# Debian Trixie keeps Syslinux BIOS modules under /usr/lib/syslinux/modules/bios.
+# Preserve the legacy paths expected by live-build's ISOLINUX staging.
+mkdir -p /lib/syslinux /root/isolinux
+
+ISOLINUX_BIN="$(find /usr/lib -type f -name isolinux.bin -print -quit)"
+VESAMENU="$(find /usr/lib/syslinux/modules/bios -type f -name vesamenu.c32 -print -quit)"
+
+if [ -z "$ISOLINUX_BIN" ] || [ ! -s "$ISOLINUX_BIN" ]; then
+    echo "ISOLINUX boot image not found in chroot" >&2
+    exit 1
+fi
+if [ -z "$VESAMENU" ] || [ ! -s "$VESAMENU" ]; then
+    echo "Syslinux vesamenu.c32 not found in chroot" >&2
+    exit 1
+fi
+
+cp "$ISOLINUX_BIN" /root/isolinux/isolinux.bin
+cp "$VESAMENU" /root/isolinux/vesamenu.c32
+cp "$ISOLINUX_BIN" /lib/syslinux/isolinux.bin
+
 for module in /usr/lib/syslinux/modules/bios/*.c32; do
-    [ -e "$module" ] || continue
+    [ -s "$module" ] || continue
+    cp "$module" "/root/isolinux/$(basename "$module")"
     ln -sf "$module" "/lib/syslinux/$(basename "$module")"
 done
