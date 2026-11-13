@@ -12,7 +12,7 @@ lb config noauto \
   --initsystem systemd \
   --security false \
   --archive-areas "main contrib non-free non-free-firmware" \
-  --apt-recommends true \
+  --apt-recommends false \
   --bootappend-live "boot=live components hostname=arya-os username=arya locales=en_US.UTF-8 keyboard-layouts=us" \
   --iso-application "Arya OS" \
   --iso-volume "ARYA_OS" \

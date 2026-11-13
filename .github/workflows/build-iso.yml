@@ -16,6 +16,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -28,49 +29,46 @@ jobs:
       - name: Configure Arya OS from project settings
         run: sudo sh auto/config
 
-      - name: Prepare executable build hooks
-        run: sudo chmod +x config/hooks/normal/*.hook.chroot
-
-      - name: Prepare host-side ISOLINUX boot files
+      - name: Prepare live-build ISOLINUX theme
         shell: bash
         run: |
           set -euxo pipefail
-          sudo apt-get install -y isolinux syslinux-common
-          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 '/isolinux\.bin$')"
-          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\.c32$')"
-          test -s "$ISOLINUX_BIN"
-          test -s "$VESAMENU"
-          sudo install -d /root/isolinux
-          sudo install -d config/includes.chroot/root/isolinux
-          sudo install -m 0644 "$ISOLINUX_BIN" /root/isolinux/isolinux.bin
-          sudo install -m 0644 "$VESAMENU" /root/isolinux/vesamenu.c32
-          sudo install -m 0644 "$ISOLINUX_BIN" config/includes.chroot/root/isolinux/isolinux.bin
-          sudo install -m 0644 "$VESAMENU" config/includes.chroot/root/isolinux/vesamenu.c32
-          while IFS= read -r module; do
-            sudo install -m 0644 "$module" "/root/isolinux/$(basename "$module")"
-            sudo install -m 0644 "$module" "config/includes.chroot/root/isolinux/$(basename "$module")"
-          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\.c32$' || true)
-          sudo ls -lh /root/isolinux/
-          sudo test -s /root/isolinux/isolinux.bin
-          sudo test -s /root/isolinux/vesamenu.c32
-          test -s config/includes.chroot/root/isolinux/isolinux.bin
-          test -s config/includes.chroot/root/isolinux/vesamenu.c32
+          THEME_SOURCE="/usr/share/live/build/bootloaders/isolinux"
+          test -s "$THEME_SOURCE/isolinux.bin"
+          test -s "$THEME_SOURCE/vesamenu.c32"
+          install -d config/bootloaders/isolinux
+          cp -a "$THEME_SOURCE/." config/bootloaders/isolinux/
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\n' | sort
 
       - name: Build hybrid ISO
         run: sudo lb build
 
-      - name: Find generated ISO
+      - name: Find and validate generated ISO
         id: iso
+        shell: bash
         run: |
-          ISO="$(find . -maxdepth 1 -type f -name '*.iso' -print -quit)"
-          test -n "$ISO"
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
           echo "path=$ISO" >> "$GITHUB_OUTPUT"
-          ls -lh "$ISO"
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: arya-os-iso
-          path: ${{ steps.iso.outputs.path }}
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
           if-no-files-found: error
           retention-days: 7

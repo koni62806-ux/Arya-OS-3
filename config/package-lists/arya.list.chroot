@@ -1,12 +1,19 @@
-# Lightweight XFCE desktop and essential system tools
+# Arya OS: lightweight XFCE live desktop for legacy amd64 hardware
+# Recommends are disabled globally; required live-session components are explicit.
 linux-image-amd64
-isolinux
-syslinux-common
 live-task-xfce
+live-boot
+live-config
+live-config-systemd
+user-setup
+sudo
+locales
+iproute2
+keyboard-configuration
+dbus-x11
 network-manager
 network-manager-gnome
 wpasupplicant
-sudo
 curl
 wget
 ca-certificates
@@ -15,10 +22,14 @@ usbutils
 lshw
 mesa-utils
 xserver-xorg-video-intel
-firmware-linux
 firmware-misc-nonfree
 firmware-intel-graphics
 firmware-b43-installer
 alsa-utils
 pavucontrol
+xfce4-terminal
+xfce4-power-manager
+mousepad
 firefox-esr
+isolinux
+syslinux-common
