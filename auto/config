@@ -7,8 +7,9 @@ lb config noauto \
   --architectures amd64 \
   --binary-image iso-hybrid \
   --debian-installer false \
+  --linux-flavours amd64 \
+  --mirror-chroot-security https://security.debian.org/debian-security/ \
   --archive-areas "main contrib non-free non-free-firmware" \
-  --security false \
   --apt-recommends true \
   --bootappend-live "boot=live components hostname=arya-os username=arya locales=en_US.UTF-8 keyboard-layouts=us" \
   --iso-application "Arya OS" \
