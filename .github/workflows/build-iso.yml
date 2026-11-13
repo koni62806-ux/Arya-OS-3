@@ -31,6 +31,16 @@ jobs:
       - name: Prepare executable build hooks
         run: sudo chmod +x config/hooks/normal/*.hook.chroot
 
+      - name: Prepare host-side ISOLINUX boot files
+        run: |
+          sudo apt-get install -y isolinux syslinux-common
+          sudo install -d /root/isolinux
+          sudo install -m 0644 /usr/lib/ISOLINUX/isolinux.bin /root/isolinux/isolinux.bin
+          sudo cp /usr/lib/syslinux/modules/bios/*.c32 /root/isolinux/
+          test -s /root/isolinux/isolinux.bin
+          test -s /root/isolinux/vesamenu.c32
+          ls -lh /root/isolinux/isolinux.bin /root/isolinux/vesamenu.c32
+
       - name: Build hybrid ISO
         run: sudo lb build
 
