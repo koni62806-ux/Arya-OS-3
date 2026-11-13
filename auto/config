@@ -9,6 +9,7 @@ lb config noauto \
   --debian-installer false \
   --linux-flavours amd64 \
   --linux-packages none \
+  --initsystem systemd \
   --mirror-chroot-security https://security.debian.org/debian-security/ \
   --archive-areas "main contrib non-free non-free-firmware" \
   --apt-recommends true \
