@@ -24,8 +24,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y live-build debootstrap xorriso squashfs-tools
 
-      - name: Configure Arya OS
-        run: sudo lb config
+      - name: Configure Arya OS from project settings
+        run: sudo sh auto/config
 
       - name: Build hybrid ISO
         run: sudo lb build
