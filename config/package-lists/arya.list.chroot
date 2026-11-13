@@ -1,10 +1,11 @@
-# Arya OS: lightweight XFCE live desktop for legacy amd64 hardware
-# Kernel is selected and installed by live-build via --linux-packages linux-image.
-# Recommends are disabled globally; required live-session components are explicit.
+# Arya OS: lightweight XFCE live desktop and installed system for legacy amd64 hardware
+# The Debian Live Installer copies this configured filesystem onto the selected target disk.
+# Recommends are disabled globally; required components are listed explicitly.
 live-task-xfce
 live-boot
 live-config
 live-config-systemd
+debian-installer-launcher
 user-setup
 sudo
 locales
@@ -31,5 +32,3 @@ xfce4-terminal
 xfce4-power-manager
 mousepad
 firefox-esr
-isolinux
-syslinux-common
