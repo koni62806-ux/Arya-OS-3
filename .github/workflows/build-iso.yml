@@ -17,6 +17,11 @@ on:
 permissions:
   contents: read
 
+# Keep only the newest ISO build for this branch running.
+concurrency:
+  group: arya-os-iso-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-24.04
