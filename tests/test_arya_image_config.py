@@ -52,6 +52,15 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("Gdk.pixbuf_get_from_window", app)
         self.assertIn("self.attachment = Path(filename)", app)
 
+
+    def test_arya_center_discovers_and_filters_installed_apps(self):
+        app = (ROOT / "apps/arya-center/arya_center.py").read_text()
+        self.assertIn("Gio.AppInfo.get_all()", app)
+        self.assertIn("info.should_show()", app)
+        self.assertIn("Gtk.SearchEntry()", app)
+        self.assertIn("self.apps_flow.invalidate_filter()", app)
+        self.assertIn("info.launch([], None)", app)
+
     def test_tor_browser_uses_isolated_firefox_profile(self):
         app = (ROOT / "apps/arya-connect/arya_connect.py").read_text()
         self.assertIn("firefox-tor-profile", app)
