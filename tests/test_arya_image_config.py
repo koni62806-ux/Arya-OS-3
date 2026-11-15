@@ -45,6 +45,13 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("self.panel_width", app)
         self.assertIn('env["ARYA_TOOL_PANEL"] = "1"', launcher)
 
+    def test_arya_tool_can_capture_and_attach_desktop_screenshot(self):
+        app = (ROOT / "apps/arya-tool/arya_tool.py").read_text()
+        self.assertIn('label="📸 اسکرین‌شات"', app)
+        self.assertIn("Gdk.get_default_root_window()", app)
+        self.assertIn("Gdk.pixbuf_get_from_window", app)
+        self.assertIn("self.attachment = Path(filename)", app)
+
     def test_tor_browser_uses_isolated_firefox_profile(self):
         app = (ROOT / "apps/arya-connect/arya_connect.py").read_text()
         self.assertIn("firefox-tor-profile", app)
