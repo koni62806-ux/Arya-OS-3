@@ -11,7 +11,7 @@ from gi.repository import Gtk, Gdk, GLib
 
 GAMES_DIR = Path("/usr/share/arya/games")
 APP_LAUNCHERS = [
-    ("Files", "org.xfce.Thunar"),
+    ("Files", "thunar"),
     ("Web browser", "firefox-esr"),
     ("Terminal", "xfce4-terminal"),
     ("Settings", "xfce4-settings-manager"),
