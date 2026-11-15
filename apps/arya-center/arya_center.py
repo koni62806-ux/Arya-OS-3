@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Arya Center: lightweight app launcher and offline game library for Arya OS."""
-import os
+import shutil
 import subprocess
 from pathlib import Path
 from urllib.parse import quote
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GLib, Gio
+from gi.repository import Gtk, Gdk, GLib, Gio, Pango
 
 GAMES_DIR = Path("/usr/share/arya/games")
 APP_LAUNCHERS = [
@@ -134,12 +134,16 @@ class AryaCenter(Gtk.Window):
                 if not name or app_id in seen:
                     continue
                 seen.add(app_id)
-                apps.append((name.casefold(), name, info))
+                searchable = " ".join(filter(None, (
+                    name, info.get_name(), info.get_executable(),
+                    info.get_description()
+                ))).casefold()
+                apps.append((name.casefold(), name, searchable, info))
             except (AttributeError, GLib.Error):
                 continue
-        for _, name, info in sorted(apps):
+        for _, name, searchable, info in sorted(apps):
             child = Gtk.FlowBoxChild()
-            child.app_name = name.casefold()
+            child.search_text = searchable
             child.app_info = info
             button = Gtk.Button()
             button.get_style_context().add_class("tile")
@@ -150,7 +154,7 @@ class AryaCenter(Gtk.Window):
                 box.pack_start(image, False, False, 0)
             label = Gtk.Label(label=name)
             label.get_style_context().add_class("name")
-            label.set_ellipsize(3)
+            label.set_ellipsize(Pango.EllipsizeMode.END)
             box.pack_start(label, False, False, 0)
             button.add(box)
             button.connect("clicked", self.launch_app_info, info)
@@ -160,7 +164,7 @@ class AryaCenter(Gtk.Window):
 
     def app_filter(self, child, _data=None):
         query = self.search.get_text().strip().casefold()
-        return not query or query in getattr(child, "app_name", "")
+        return not query or query in getattr(child, "search_text", "")
 
     def filter_apps(self, *_):
         self.apps_flow.invalidate_filter()
@@ -172,13 +176,14 @@ class AryaCenter(Gtk.Window):
             self.message("اجرای برنامه ناموفق بود: " + str(error))
 
     def launch_command(self, _button, command):
-        executable = command.split()[0]
-        if not (os.path.isabs(executable) and os.access(executable, os.X_OK)) and not Gio.AppInfo.get_default_for_type("x-scheme-handler/" + executable, False):
-            # PATH lookup is delegated to Popen; no shell is involved.
-            pass
+        # Quick-launch entries are single executable names, never shell snippets.
+        executable = shutil.which(command)
+        if not executable:
+            self.message("این برنامه نصب نیست یا در PATH پیدا نشد: " + command)
+            return
         try:
-            subprocess.Popen([command], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                             start_new_session=True)
+            subprocess.Popen([executable], stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
         except OSError as error:
             self.message("باز کردن برنامه ناموفق بود: " + str(error))
 
