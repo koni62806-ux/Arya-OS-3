@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=LXPolkit Authentication Agent
+Comment=Graphical authorization prompts for Arya OS
+Exec=lxpolkit
+OnlyShowIn=XFCE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
