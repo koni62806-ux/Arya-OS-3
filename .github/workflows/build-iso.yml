@@ -9,6 +9,7 @@ on:
       - "apps/**"
       - "build/**"
       - "config/**"
+      - "tests/**"
       - "docs/**"
       - "README.md"
       - ".github/workflows/build-iso.yml"
