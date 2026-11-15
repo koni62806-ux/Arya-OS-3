@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Small always-on-top Arya Tool edge launcher for XFCE/X11."""
+import os
 import subprocess
 import gi
 gi.require_version("Gtk", "3.0")
@@ -40,7 +41,9 @@ class EdgeLauncher(Gtk.Window):
         self.move(rect.x + rect.width - 54, rect.y + rect.height // 2 - 29)
     def open_tool(self, *_):
         try:
-            subprocess.Popen(["arya-tool"], close_fds=True, start_new_session=True)
+            env = os.environ.copy()
+            env["ARYA_TOOL_PANEL"] = "1"
+            subprocess.Popen(["arya-tool"], env=env, close_fds=True, start_new_session=True)
         except OSError as exc:
             dialog = Gtk.MessageDialog(transient_for=self, flags=0,
                 message_type=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.OK,
