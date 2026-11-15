@@ -123,15 +123,15 @@ jobs:
           test -s "$THEME_SOURCE/isolinux.cfg"
           sudo install -d config/bootloaders/isolinux
           sudo cp -a "$THEME_SOURCE/." config/bootloaders/isolinux/
-          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 -E '/isolinux[.]bin
-          VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32
+          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 -E '/isolinux[.]bin$')"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32$')"
           test -s "$ISOLINUX_BIN"
           test -s "$VESAMENU"
           sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
           sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
           while IFS= read -r module; do
             sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
-          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32$')
           test -s config/bootloaders/isolinux/isolinux.bin
           test -s config/bootloaders/isolinux/vesamenu.c32
           find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
