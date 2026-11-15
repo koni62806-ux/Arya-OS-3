@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Arya Center
+Comment=Apps, settings and games for Arya OS
+Exec=arya-center
+Icon=applications-system
+Terminal=false
+Categories=System;Utility;
+StartupNotify=true
