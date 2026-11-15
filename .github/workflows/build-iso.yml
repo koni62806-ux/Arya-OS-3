@@ -42,7 +42,6 @@ jobs:
           install -D -m 0755 apps/arya-center/arya_center.py config/includes.chroot/usr/local/bin/arya-center
           install -D -m 0644 apps/arya-center/arya-center.desktop config/includes.chroot/usr/share/applications/arya-center.desktop
           install -D -m 0644 apps/arya-center/arya-center.desktop config/includes.chroot/etc/skel/Desktop/arya-center.desktop
-          install -D -m 0644 config/includes.chroot/usr/share/icons/hicolor/scalable/apps/arya-center.svg config/includes.chroot/usr/share/icons/hicolor/scalable/apps/arya-center.svg
           python3 -m py_compile apps/arya-center/arya_center.py
           echo "Arya Center staged and Python syntax validated."
 
