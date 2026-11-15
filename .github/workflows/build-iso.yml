@@ -43,6 +43,7 @@ jobs:
           install -D -m 0644 apps/arya-diagnostics/arya-diagnostics.desktop config/includes.chroot/usr/share/applications/arya-diagnostics.desktop
           install -D -m 0755 apps/arya-connect/arya_connect.py config/includes.chroot/usr/local/bin/arya-connect
           install -D -m 0644 apps/arya-connect/arya-connect.desktop config/includes.chroot/usr/share/applications/arya-connect.desktop
+          install -D -m 0644 apps/arya-connect/arya-connect.desktop config/includes.chroot/etc/skel/Desktop/arya-connect.desktop
           python3 -m py_compile apps/arya-tool/arya_tool.py apps/arya-tool/arya_tool_launcher.py apps/arya-gaming/arya_gaming.py apps/arya-center/arya_center.py apps/arya-diagnostics/arya_diagnostics.py apps/arya-connect/arya_connect.py
 
       - name: Run Arya configuration tests
