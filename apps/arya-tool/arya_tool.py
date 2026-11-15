@@ -144,6 +144,10 @@ class AryaTool(Gtk.Application):
         attach = Gtk.Button(label="＋ فایل")
         attach.connect("clicked", self.choose_file)
         composer.pack_start(attach, False, False, 0)
+        screenshot = Gtk.Button(label="📸 اسکرین‌شات")
+        screenshot.set_tooltip_text("گرفتن تصویر از صفحه و پیوست کردن آن برای Arya")
+        screenshot.connect("clicked", self.capture_screen)
+        composer.pack_start(screenshot, False, False, 0)
         self.entry = Gtk.Entry()
         self.entry.set_placeholder_text("پیامت را برای Arya بنویس...")
         self.entry.connect("activate", self.send_message)
@@ -191,6 +195,25 @@ class AryaTool(Gtk.Application):
             self.attachment = Path(dialog.get_filename())
             self.attachment_label.set_text("پیوست: " + self.attachment.name)
         dialog.destroy()
+
+    def capture_screen(self, *_):
+        """Capture the current X11 desktop only after an explicit user click."""
+        try:
+            root = Gdk.get_default_root_window()
+            if root is None:
+                raise RuntimeError("تصویر صفحه در این محیط دسکتاپ در دسترس نیست.")
+            width, height = root.get_width(), root.get_height()
+            pixbuf = Gdk.pixbuf_get_from_window(root, 0, 0, width, height)
+            if pixbuf is None:
+                raise RuntimeError("گرفتن تصویر صفحه ناموفق بود.")
+            import tempfile
+            fd, filename = tempfile.mkstemp(prefix="arya-tool-screen-", suffix=".png")
+            os.close(fd)
+            pixbuf.savev(filename, "png", [], [])
+            self.attachment = Path(filename)
+            self.attachment_label.set_text("اسکرین‌شات پیوست شد: " + self.attachment.name)
+        except Exception as exc:
+            self.add_message("assistant", "اسکرین‌شات گرفته نشد: " + str(exc))
 
     def send_message(self, *_):
         text = self.entry.get_text().strip()
