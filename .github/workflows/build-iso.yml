@@ -55,6 +55,16 @@ jobs:
           python3 -m py_compile apps/arya-diagnostics/arya_diagnostics.py
           echo "Arya Diagnostics staged and Python syntax validated."
 
+      - name: Stage Arya Connect
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s apps/arya-connect/arya_connect.py
+          install -D -m 0755 apps/arya-connect/arya_connect.py config/includes.chroot/usr/local/bin/arya-connect
+          install -D -m 0644 apps/arya-connect/arya-connect.desktop config/includes.chroot/usr/share/applications/arya-connect.desktop
+          python3 -m py_compile apps/arya-connect/arya_connect.py
+          echo "Arya Connect staged and Python syntax validated."
+
       - name: Install Debian Trixie live-build and BIOS bootloader dependencies
         shell: bash
         run: |
