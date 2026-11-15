@@ -2,6 +2,7 @@
 """Arya Connect: consent-based Tor/Snowflake connection control for Arya OS."""
 import subprocess
 import threading
+from pathlib import Path
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GLib
@@ -47,11 +48,42 @@ class AryaConnect(Gtk.Window):
         refresh = Gtk.Button(label="بررسی وضعیت")
         refresh.connect("clicked", lambda *_: self.refresh())
         root.pack_start(refresh, False, False, 0)
+        browser = Gtk.Button(label="باز کردن مرورگر از طریق Tor")
+        browser.connect("clicked", self.open_tor_browser)
+        root.pack_start(browser, False, False, 0)
         note = Gtk.Label(label="نکته: این نسخه پراکسی Tor را مدیریت می‌کند؛ تونل سراسری VPN برای تمام برنامه‌ها نیست.")
         note.set_line_wrap(True)
         note.set_xalign(0)
         root.pack_end(note, False, False, 0)
         self.refresh()
+
+    def open_tor_browser(self, *_):
+        try:
+            active = subprocess.run(["systemctl", "is-active", "--quiet", SERVICE],
+                timeout=8).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            active = False
+        if not active:
+            self.status.set_text("ابتدا اتصال Tor را روشن کن؛ سپس مرورگر امن را باز کن.")
+            return
+        profile = Path.home() / ".local" / "share" / "arya-connect" / "firefox-tor-profile"
+        try:
+            profile.mkdir(parents=True, exist_ok=True)
+            preferences = """user_pref("network.proxy.type", 1);
+user_pref("network.proxy.socks", "127.0.0.1");
+user_pref("network.proxy.socks_port", 9050);
+user_pref("network.proxy.socks_version", 5);
+user_pref("network.proxy.socks_remote_dns", true);
+user_pref("network.proxy.no_proxies_on", "");
+user_pref("network.trr.mode", 5);
+user_pref("media.peerconnection.enabled", false);
+"""
+            (profile / "user.js").write_text(preferences, encoding="utf-8")
+            subprocess.Popen(["firefox-esr", "--no-remote", "--profile", str(profile), "about:blank"],
+                close_fds=True, start_new_session=True)
+            self.status.set_text("مرورگر با پراکسی SOCKS5 باز شد؛ اتصال واقعی را در مرورگر بررسی کن.")
+        except (OSError, subprocess.SubprocessError) as exc:
+            self.status.set_text("مرورگر Tor باز نشد: " + str(exc))
 
     def run_action(self, _button, action):
         if action == "start":
