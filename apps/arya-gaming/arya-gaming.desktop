@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Arya Gaming
+Comment=Launch games with GameMode when available
+Exec=arya-gaming
+Icon=applications-games
+Terminal=false
+Categories=Game;

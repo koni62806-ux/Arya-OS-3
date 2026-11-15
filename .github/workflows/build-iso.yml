@@ -35,6 +35,23 @@ jobs:
           python3 -m py_compile apps/arya-tool/arya_tool.py
           echo "Arya Tool staged and Python syntax validated."
 
+      - name: Stage Arya Tool floating edge launcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -D -m 0755 apps/arya-tool/arya_tool_launcher.py config/includes.chroot/usr/local/bin/arya-tool-launcher
+          install -D -m 0644 apps/arya-tool/arya-tool-launcher.desktop config/includes.chroot/usr/share/applications/arya-tool-launcher.desktop
+          python3 -m py_compile apps/arya-tool/arya_tool_launcher.py
+
+      - name: Stage Arya Gaming
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -D -m 0755 apps/arya-gaming/arya_gaming.py config/includes.chroot/usr/local/bin/arya-gaming
+          install -D -m 0644 apps/arya-gaming/arya-gaming.desktop config/includes.chroot/usr/share/applications/arya-gaming.desktop
+          install -D -m 0644 apps/arya-gaming/arya-gaming.desktop config/includes.chroot/etc/skel/Desktop/arya-gaming.desktop
+          python3 -m py_compile apps/arya-gaming/arya_gaming.py
+
       - name: Stage Arya Center app hub
         shell: bash
         run: |
@@ -44,7 +61,6 @@ jobs:
           install -D -m 0644 apps/arya-center/arya-center.desktop config/includes.chroot/usr/share/applications/arya-center.desktop
           install -D -m 0644 apps/arya-center/arya-center.desktop config/includes.chroot/etc/skel/Desktop/arya-center.desktop
           python3 -m py_compile apps/arya-center/arya_center.py
-          echo "Arya Center staged and Python syntax validated."
 
       - name: Stage Arya Diagnostics
         shell: bash
@@ -54,7 +70,6 @@ jobs:
           install -D -m 0755 apps/arya-diagnostics/arya_diagnostics.py config/includes.chroot/usr/local/bin/arya-diagnostics
           install -D -m 0644 apps/arya-diagnostics/arya-diagnostics.desktop config/includes.chroot/usr/share/applications/arya-diagnostics.desktop
           python3 -m py_compile apps/arya-diagnostics/arya_diagnostics.py
-          echo "Arya Diagnostics staged and Python syntax validated."
 
       - name: Stage Arya Connect
         shell: bash
@@ -64,7 +79,6 @@ jobs:
           install -D -m 0755 apps/arya-connect/arya_connect.py config/includes.chroot/usr/local/bin/arya-connect
           install -D -m 0644 apps/arya-connect/arya-connect.desktop config/includes.chroot/usr/share/applications/arya-connect.desktop
           python3 -m py_compile apps/arya-connect/arya_connect.py
-          echo "Arya Connect staged and Python syntax validated."
 
       - name: Test Arya image configuration
         shell: bash
@@ -72,6 +86,8 @@ jobs:
           set -euo pipefail
           test -s config/includes.chroot/etc/tor/torrc
           test -s config/includes.chroot/etc/xdg/autostart/lxpolkit.desktop
+          test -s config/includes.chroot/etc/xdg/autostart/plank.desktop
+          test -s config/includes.chroot/etc/xdg/autostart/arya-tool-launcher.desktop
           python3 -m unittest discover -s tests -v
 
       - name: Install Debian Trixie live-build and BIOS bootloader dependencies
@@ -82,10 +98,6 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             cpio debootstrap debian-archive-keyring xorriso squashfs-tools isolinux syslinux-common wget ca-certificates
 
-          # Ubuntu 24.04 ships an obsolete live-build 3.0~a57 helper that
-          # still requests removed installer packages (lilo, grub, 2.6 kernel).
-          # Use Debian Trixie's maintained live-build, which includes the
-          # installer_debian-installer Trixie fixes.
           DEB="live-build_20250505+deb13u1_all.deb"
           wget -q "https://deb.debian.org/debian/pool/main/l/live-build/${DEB}" -O "${DEB}"
           echo "58e09779881cbcc631c49ceb703413e0247a87db01823e597b2a1c40a2afd8f4  ${DEB}" | sha256sum --check
@@ -111,21 +123,18 @@ jobs:
           test -s "$THEME_SOURCE/isolinux.cfg"
           sudo install -d config/bootloaders/isolinux
           sudo cp -a "$THEME_SOURCE/." config/bootloaders/isolinux/
-
-          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 '/isolinux\.bin$')"
-          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\.c32$')"
+          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 '/isolinux\\.bin$')"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
           test -s "$ISOLINUX_BIN"
           test -s "$VESAMENU"
           sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
           sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
-
           while IFS= read -r module; do
             sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
-          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\.c32$')
-
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
           test -s config/bootloaders/isolinux/isolinux.bin
           test -s config/bootloaders/isolinux/vesamenu.c32
-          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\n' | sort
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
 
       - name: Build hybrid installable ISO
         run: sudo lb build
@@ -138,29 +147,22 @@ jobs:
           mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
           if [ "${#ISOS[@]}" -ne 1 ]; then
             echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
-            printf '%s\n' "${ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
             exit 1
           fi
-
           ISO="${ISOS[0]}"
           test -s "$ISO"
           xorriso -indev "$ISO" -toc >/dev/null
-
-          # A live installer must contain its own Debian Installer kernel/initrd,
-          # not just the live-session kernel and filesystem.
           xorriso -osirrox on -indev "$ISO" \
             -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
             -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
           test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
           test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
-
-          # The graphical installer is enabled in auto/config; verify its payload too.
           xorriso -osirrox on -indev "$ISO" \
             -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
             -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
           test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
           test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
-
           xorriso -indev "$ISO" -report_el_torito plain
           sha256sum "$ISO" | tee "$ISO.sha256"
           ls -lh "$ISO" "$ISO.sha256"

@@ -22,6 +22,20 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("Exec=lxpolkit", desktop)
         self.assertIn("OnlyShowIn=XFCE;", desktop)
 
+    def test_dock_and_edge_assistant_are_enabled(self):
+        packages = set((ROOT / "config/package-lists/arya.list.chroot").read_text().split())
+        self.assertIn("plank", packages)
+        self.assertIn("gamemode", packages)
+        plank = (ROOT / "config/includes.chroot/etc/xdg/autostart/plank.desktop").read_text()
+        assistant = (ROOT / "config/includes.chroot/etc/xdg/autostart/arya-tool-launcher.desktop").read_text()
+        self.assertIn("Exec=plank", plank)
+        self.assertIn("Exec=arya-tool-launcher", assistant)
+
+    def test_gaming_mode_is_staged(self):
+        app = (ROOT / "apps/arya-gaming/arya_gaming.py").read_text()
+        self.assertIn("gamemoderun", app)
+        self.assertIn("Arya Gaming", (ROOT / "apps/arya-gaming/arya-gaming.desktop").read_text())
+
 
 if __name__ == "__main__":
     unittest.main()

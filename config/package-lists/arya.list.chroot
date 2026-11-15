@@ -29,6 +29,7 @@ alsa-utils
 pavucontrol
 xfce4-terminal
 xfce4-power-manager
+xfce4-screenshooter
 mousepad
 firefox-esr
 python3
@@ -39,6 +40,9 @@ xfce4-whiskermenu-plugin
 xfce4-pulseaudio-plugin
 papirus-icon-theme
 arc-theme
+plank
+gamemode
+sound-theme-freedesktop
 # Censorship-circumvention foundation: Tor client and volunteer Snowflake transport.
 tor
 snowflake-client

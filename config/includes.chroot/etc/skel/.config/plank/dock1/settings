@@ -1,0 +1,11 @@
+[PlankDockPreferences]
+DockItemsAlignment=3
+HideMode=1
+IconSize=44
+ItemsAlignment=3
+Monitor=
+Position=3
+PressureReveal=false
+ShowDockItem=false
+Theme=Gtk+
+TooltipsEnabled=true
