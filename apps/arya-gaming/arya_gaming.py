@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Arya Gaming: launch a selected game through GameMode when available."""
 import shutil
+import shlex
+import os
 import subprocess
 import gi
 gi.require_version("Gtk", "3.0")
@@ -43,9 +45,20 @@ class GamingWindow(Gtk.Window):
         if not shutil.which(value) and not value.startswith("/"):
             self.status.set_text("فرمان پیدا نشد؛ نام برنامه یا مسیر کامل را بررسی کن.")
             return
-        command = [value]
+        try:
+            command = shlex.split(value)
+        except ValueError as exc:
+            self.status.set_text("فرمان نامعتبر است: " + str(exc))
+            return
+        if not command:
+            self.status.set_text("فرمان اجرای بازی خالی است.")
+            return
+        executable = command[0]
+        if not (shutil.which(executable) or (executable.startswith("/") and os.path.isfile(executable))):
+            self.status.set_text("برنامه پیدا نشد: " + executable)
+            return
         if shutil.which("gamemoderun"):
-            command = ["gamemoderun", "--", value]
+            command = ["gamemoderun", "--"] + command
         try:
             subprocess.Popen(command, close_fds=True, start_new_session=True)
             self.status.set_text("بازی اجرا شد؛ GameMode: " + ("فعال" if command[0] == "gamemoderun" else "در دسترس نیست"))
