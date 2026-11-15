@@ -61,6 +61,20 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("self.apps_flow.invalidate_filter()", app)
         self.assertIn("info.launch([], None)", app)
 
+    def test_arya_center_searches_app_names_and_descriptions(self):
+        app = (ROOT / "apps/arya-center/arya_center.py").read_text()
+        self.assertIn("info.get_description()", app)
+        self.assertIn("info.get_executable()", app)
+        self.assertIn("child.search_text = searchable", app)
+        self.assertIn('query in getattr(child, "search_text", "")', app)
+        self.assertIn("Pango.EllipsizeMode.END", app)
+
+    def test_arya_center_quick_launch_checks_executable(self):
+        app = (ROOT / "apps/arya-center/arya_center.py").read_text()
+        self.assertIn("shutil.which(command)", app)
+        self.assertIn("subprocess.Popen([executable]", app)
+        self.assertNotIn('subprocess.Popen([command]', app)
+
     def test_tor_browser_uses_isolated_firefox_profile(self):
         app = (ROOT / "apps/arya-connect/arya_connect.py").read_text()
         self.assertIn("firefox-tor-profile", app)
