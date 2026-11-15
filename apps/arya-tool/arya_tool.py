@@ -24,7 +24,7 @@ APP_NAME = "Arya Tool"
 CONFIG_DIR = Path.home() / ".config" / "arya-tool"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 DEFAULTS = {
-    "mode": "cloud",
+    "mode": "hybrid",
     "cloud_url": "https://api.openai.com/v1",
     "cloud_model": "gpt-4o-mini",
     "local_url": "http://127.0.0.1:11434/v1",
