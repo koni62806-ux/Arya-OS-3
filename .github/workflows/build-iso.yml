@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "auto/**"
+      - "apps/**"
       - "build/**"
       - "config/**"
       - "docs/**"
@@ -22,6 +23,16 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Stage Arya Tool into the live system
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s apps/arya-tool/arya_tool.py
+          install -D -m 0755 apps/arya-tool/arya_tool.py config/includes.chroot/usr/local/bin/arya-tool
+          install -D -m 0644 apps/arya-tool/arya-tool.desktop config/includes.chroot/usr/share/applications/arya-tool.desktop
+          python3 -m py_compile apps/arya-tool/arya_tool.py
+          echo "Arya Tool staged and Python syntax validated."
 
       - name: Install Debian Trixie live-build and BIOS bootloader dependencies
         shell: bash
@@ -61,8 +72,8 @@ jobs:
           sudo install -d config/bootloaders/isolinux
           sudo cp -a "$THEME_SOURCE/." config/bootloaders/isolinux/
 
-          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 '/isolinux\.bin$')"
-          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\.c32$')"
+          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 '/isolinux\\.bin$')"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
           test -s "$ISOLINUX_BIN"
           test -s "$VESAMENU"
           sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
@@ -70,11 +81,11 @@ jobs:
 
           while IFS= read -r module; do
             sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
-          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\.c32$')
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
 
           test -s config/bootloaders/isolinux/isolinux.bin
           test -s config/bootloaders/isolinux/vesamenu.c32
-          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\n' | sort
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
 
       - name: Build hybrid installable ISO
         run: sudo lb build
@@ -87,7 +98,7 @@ jobs:
           mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
           if [ "${#ISOS[@]}" -ne 1 ]; then
             echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
-            printf '%s\n' "${ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
             exit 1
           fi
 
@@ -97,15 +108,15 @@ jobs:
 
           # A live installer must contain its own Debian Installer kernel/initrd,
           # not just the live-session kernel and filesystem.
-          xorriso -osirrox on -indev "$ISO" \
-            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+          xorriso -osirrox on -indev "$ISO" \\
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \\
             -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
           test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
           test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
 
           # The graphical installer is enabled in auto/config; verify its payload too.
-          xorriso -osirrox on -indev "$ISO" \
-            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+          xorriso -osirrox on -indev "$ISO" \\
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \\
             -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
           test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
           test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
