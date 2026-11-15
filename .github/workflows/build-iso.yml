@@ -123,7 +123,2951 @@ jobs:
           test -s "$THEME_SOURCE/isolinux.cfg"
           sudo install -d config/bootloaders/isolinux
           sudo cp -a "$THEME_SOURCE/." config/bootloaders/isolinux/
-          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 -E '/isolinux[.]bin)"
+          ISOLINUX_BIN="$(dpkg -L isolinux | grep -m1 -E '/isolinux[.]bin
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep -E '/usr/lib/syslinux/modules/bios/.*[.]c32)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
+          VESAMENU="$(dpkg -L syslinux-common | grep -m1 '/vesamenu\\.c32$')"
+          test -s "$ISOLINUX_BIN"
+          test -s "$VESAMENU"
+          sudo install -m 0644 "$ISOLINUX_BIN" config/bootloaders/isolinux/isolinux.bin
+          sudo install -m 0644 "$VESAMENU" config/bootloaders/isolinux/vesamenu.c32
+          while IFS= read -r module; do
+            sudo install -m 0644 "$module" "config/bootloaders/isolinux/$(basename "$module")"
+          done < <(dpkg -L syslinux-common | grep '/usr/lib/syslinux/modules/bios/.*\\.c32$')
+          test -s config/bootloaders/isolinux/isolinux.bin
+          test -s config/bootloaders/isolinux/vesamenu.c32
+          find config/bootloaders/isolinux -maxdepth 1 -type f -printf '%f\\n' | sort
+
+      - name: Build hybrid installable ISO
+        run: sudo lb build
+
+      - name: Find and validate generated installable ISO
+        id: iso
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t ISOS < <(find . -maxdepth 1 -type f -name '*.iso' -print | sort)
+          if [ "${#ISOS[@]}" -ne 1 ]; then
+            echo "Expected exactly one ISO, found ${#ISOS[@]}" >&2
+            printf '%s\\n' "${ISOS[@]}" >&2
+            exit 1
+          fi
+          ISO="${ISOS[0]}"
+          test -s "$ISO"
+          xorriso -indev "$ISO" -toc >/dev/null
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/vmlinuz "$RUNNER_TEMP/arya-installer-vmlinuz" \
+            -extract /install/initrd.gz "$RUNNER_TEMP/arya-installer-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-initrd.gz"
+          xorriso -osirrox on -indev "$ISO" \
+            -extract /install/gtk/vmlinuz "$RUNNER_TEMP/arya-installer-gtk-vmlinuz" \
+            -extract /install/gtk/initrd.gz "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-vmlinuz"
+          test -s "$RUNNER_TEMP/arya-installer-gtk-initrd.gz"
+          xorriso -indev "$ISO" -report_el_torito plain
+          sha256sum "$ISO" | tee "$ISO.sha256"
+          ls -lh "$ISO" "$ISO.sha256"
+          echo "path=$ISO" >> "$GITHUB_OUTPUT"
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arya-os-installable-iso
+          path: |
+            ${{ steps.iso.outputs.path }}
+            ${{ steps.iso.outputs.path }}.sha256
+          if-no-files-found: error
+          retention-days: 7
+)"
           VESAMENU="$(dpkg -L syslinux-common | grep -m1 -E '/vesamenu[.]c32)"
           test -s "$ISOLINUX_BIN"
           test -s "$VESAMENU"
