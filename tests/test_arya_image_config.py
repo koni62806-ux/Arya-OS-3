@@ -36,6 +36,8 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("gamemoderun", app)
         self.assertIn("shlex.split", app)
         self.assertIn('"--"] + command', app)
+        self.assertLess(app.index("command = shlex.split(value)"), app.index("executable = command[0]"))
+        self.assertIn("os.access(executable, os.X_OK)", app)
         self.assertIn("Arya Gaming", (ROOT / "apps/arya-gaming/arya-gaming.desktop").read_text())
 
     def test_arya_tool_edge_launcher_opens_half_screen_panel(self):
@@ -74,6 +76,28 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("shutil.which(command)", app)
         self.assertIn("subprocess.Popen([executable]", app)
         self.assertNotIn('subprocess.Popen([command]', app)
+
+    def test_arya_tool_uses_safe_network_and_conversation_handling(self):
+        app = (ROOT / "apps/arya-tool/arya_tool.py").read_text()
+        self.assertIn("urlsplit(url)", app)
+        self.assertIn('parsed.scheme != "https"', app)
+        self.assertIn("self.request_in_progress", app)
+        self.assertIn("self.messages[-20:]", app)
+        self.assertIn("Pango.WrapMode.WORD_CHAR", app)
+        self.assertIn("temporary.replace(CONFIG_FILE)", app)
+
+    def test_diagnostics_include_network_and_driver_visibility(self):
+        app = (ROOT / "apps/arya-diagnostics/arya_diagnostics.py").read_text()
+        self.assertIn('["lspci", "-nnk"]', app)
+        self.assertIn('["rfkill", "list"]', app)
+        self.assertIn('["nmcli", "general", "status"]', app)
+        self.assertIn('["lsmod"]', app)
+
+    def test_arya_center_search_supports_multiple_terms_and_categories(self):
+        app = (ROOT / "apps/arya-center/arya_center.py").read_text()
+        self.assertIn("info.get_categories()", app)
+        self.assertIn("terms = self.search.get_text().casefold().split()", app)
+        self.assertIn("return all(term in searchable for term in terms)", app)
 
     def test_tor_browser_uses_isolated_firefox_profile(self):
         app = (ROOT / "apps/arya-connect/arya_connect.py").read_text()

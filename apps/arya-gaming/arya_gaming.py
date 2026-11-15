@@ -42,10 +42,8 @@ class GamingWindow(Gtk.Window):
         if not value:
             self.status.set_text("ابتدا فرمان اجرای بازی را وارد کن.")
             return
-        if not shutil.which(value) and not value.startswith("/"):
-            self.status.set_text("فرمان پیدا نشد؛ نام برنامه یا مسیر کامل را بررسی کن.")
-            return
         try:
+            # Parse first so quoted executable paths and command arguments work.
             command = shlex.split(value)
         except ValueError as exc:
             self.status.set_text("فرمان نامعتبر است: " + str(exc))
@@ -54,8 +52,13 @@ class GamingWindow(Gtk.Window):
             self.status.set_text("فرمان اجرای بازی خالی است.")
             return
         executable = command[0]
-        if not (shutil.which(executable) or (executable.startswith("/") and os.path.isfile(executable))):
-            self.status.set_text("برنامه پیدا نشد: " + executable)
+        resolved = shutil.which(executable)
+        if resolved:
+            command[0] = resolved
+        elif os.path.isfile(executable) and os.access(executable, os.X_OK):
+            command[0] = os.path.abspath(executable)
+        else:
+            self.status.set_text("برنامه پیدا نشد یا اجازهٔ اجرا ندارد: " + executable)
             return
         if shutil.which("gamemoderun"):
             command = ["gamemoderun", "--"] + command

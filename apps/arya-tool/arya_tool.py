@@ -15,10 +15,11 @@ import threading
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GdkPixbuf, GLib, Gdk
+from gi.repository import Gtk, GLib, Gdk, Pango
 
 APP_NAME = "Arya Tool"
 CONFIG_DIR = Path.home() / ".config" / "arya-tool"
@@ -57,8 +58,10 @@ def load_config():
 
 def save_config(data):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    CONFIG_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    CONFIG_FILE.chmod(0o600)
+    temporary = CONFIG_FILE.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    temporary.chmod(0o600)
+    temporary.replace(CONFIG_FILE)
 
 
 class AryaTool(Gtk.Application):
@@ -67,6 +70,7 @@ class AryaTool(Gtk.Application):
         self.config = load_config()
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         self.attachment = None
+        self.request_in_progress = False
 
     def do_activate(self):
         self.window = Gtk.ApplicationWindow(application=self, title="Arya Tool")
@@ -173,7 +177,7 @@ class AryaTool(Gtk.Application):
         body = Gtk.Label(label=text)
         body.set_xalign(0)
         body.set_line_wrap(True)
-        body.set_line_wrap_mode(2)
+        body.set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
         body.set_selectable(True)
         body.set_max_width_chars(82)
         card.pack_start(who, False, False, 0)
@@ -217,8 +221,9 @@ class AryaTool(Gtk.Application):
 
     def send_message(self, *_):
         text = self.entry.get_text().strip()
-        if not text and not self.attachment:
+        if self.request_in_progress or (not text and not self.attachment):
             return
+        self.request_in_progress = True
         self.entry.set_text("")
         self.add_message("user", text or "لطفاً این فایل را بررسی کن: " + self.attachment.name)
         content = text
@@ -243,9 +248,15 @@ class AryaTool(Gtk.Application):
             else:
                 content = (text + "\nفایل پیوست شده: " + path.name +
                            " (این نوع فایل در نسخهٔ اولیه قابل تحلیل مستقیم نیست.)").strip()
+            if path.name.startswith("arya-tool-screen-"):
+                try:
+                    path.unlink(missing_ok=True)
+                except OSError:
+                    pass
             self.attachment = None
             self.attachment_label.set_text("")
         self.messages.append({"role": "user", "content": content})
+        self.messages = [self.messages[0]] + self.messages[-20:]
         self.send_btn.set_sensitive(False)
         self.add_message("assistant", "دارم بررسی می‌کنم…")
         threading.Thread(target=self.ask_model, daemon=True).start()
@@ -271,6 +282,13 @@ class AryaTool(Gtk.Application):
 
     def request_endpoint(self, which):
         url = self.config.get(which + "_url", DEFAULTS[which + "_url"]).rstrip("/")
+        parsed = urlsplit(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise ValueError("آدرس API باید یک نشانی معتبر HTTP یا HTTPS باشد.")
+        if parsed.username or parsed.password:
+            raise ValueError("نام کاربری و رمز را داخل نشانی API قرار نده.")
+        if which == "cloud" and parsed.scheme != "https" and parsed.hostname not in ("localhost", "127.0.0.1", "::1"):
+            raise ValueError("برای ارسال کلید API به سرویس آنلاین، اتصال HTTPS لازم است.")
         model = self.config.get(which + "_model", DEFAULTS[which + "_model"])
         key = os.environ.get("ARYA_AI_API_KEY", "") if which == "cloud" else ""
         payload = {"model": model, "messages": self.messages, "temperature": 0.4}
@@ -279,11 +297,19 @@ class AryaTool(Gtk.Application):
             headers={"Content-Type": "application/json", **({"Authorization": "Bearer " + key} if key else {})})
         with urllib.request.urlopen(req, timeout=75) as response:
             result = json.loads(response.read().decode("utf-8"))
-        return result["choices"][0]["message"]["content"]
+        try:
+            answer = result["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise ValueError("پاسخ سرویس هوش مصنوعی قالب معتبر ندارد.") from exc
+        if not isinstance(answer, str) or not answer.strip():
+            raise ValueError("سرویس هوش مصنوعی پاسخ متنی خالی برگرداند.")
+        return answer
 
     def finish_answer(self, answer):
+        self.request_in_progress = False
         self.send_btn.set_sensitive(True)
-        self.add_message("assistant", answer)
+        visible_answer = re.sub(r"\[\[open_app:(?:firefox|files|terminal|settings)\]\]", "", answer).strip()
+        self.add_message("assistant", visible_answer or "درخواست آمادهٔ تأیید است.")
         self.check_action(answer)
         return False
 
@@ -361,8 +387,6 @@ def main():
     """
     provider = Gtk.CssProvider()
     provider.load_from_data(css)
-    Gtk.StyleContext.add_provider_for_screen(GdkPixbuf, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION) if False else None
-    from gi.repository import Gdk
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
     AryaTool().run(None)
 

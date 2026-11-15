@@ -11,9 +11,12 @@ COMMANDS = [
     ("Processor", ["lscpu"]),
     ("Memory", ["free", "-h"]),
     ("Storage", ["df", "-hT"]),
-    ("PCI devices", ["lspci", "-nn"]),
+    ("PCI devices and kernel drivers", ["lspci", "-nnk"]),
     ("USB devices", ["lsusb"]),
     ("Network links", ["ip", "-brief", "link"]),
+    ("Network Manager", ["nmcli", "general", "status"]),
+    ("Radio blocks (Wi-Fi/Bluetooth)", ["rfkill", "list"]),
+    ("Loaded kernel modules", ["lsmod"]),
 ]
 
 def report():

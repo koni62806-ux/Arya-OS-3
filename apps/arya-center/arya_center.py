@@ -136,7 +136,7 @@ class AryaCenter(Gtk.Window):
                 seen.add(app_id)
                 searchable = " ".join(filter(None, (
                     name, info.get_name(), info.get_executable(),
-                    info.get_description()
+                    info.get_description(), info.get_id(), info.get_categories()
                 ))).casefold()
                 apps.append((name.casefold(), name, searchable, info))
             except (AttributeError, GLib.Error):
@@ -163,8 +163,9 @@ class AryaCenter(Gtk.Window):
         self.apps_flow.show_all()
 
     def app_filter(self, child, _data=None):
-        query = self.search.get_text().strip().casefold()
-        return not query or query in getattr(child, "search_text", "")
+        terms = self.search.get_text().casefold().split()
+        searchable = getattr(child, "search_text", "")
+        return all(term in searchable for term in terms)
 
     def filter_apps(self, *_):
         self.apps_flow.invalidate_filter()
