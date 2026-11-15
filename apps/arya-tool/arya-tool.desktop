@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Arya Tool
+Comment=Your assistant for Arya OS
+Exec=arya-tool
+Icon=help-browser
+Terminal=false
+Categories=Utility;

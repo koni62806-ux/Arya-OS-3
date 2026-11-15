@@ -3,9 +3,10 @@ name: Build Arya OS ISO
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/arya-tool-foundation]
     paths:
       - "auto/**"
+      - "apps/**"
       - "build/**"
       - "config/**"
       - "docs/**"
@@ -22,6 +23,28 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Stage Arya Tool into the live system
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s apps/arya-tool/arya_tool.py
+          install -D -m 0755 apps/arya-tool/arya_tool.py config/includes.chroot/usr/local/bin/arya-tool
+          install -D -m 0644 apps/arya-tool/arya-tool.desktop config/includes.chroot/usr/share/applications/arya-tool.desktop
+          python3 -m py_compile apps/arya-tool/arya_tool.py
+          echo "Arya Tool staged and Python syntax validated."
+
+      - name: Stage Arya Center app hub
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s apps/arya-center/arya_center.py
+          install -D -m 0755 apps/arya-center/arya_center.py config/includes.chroot/usr/local/bin/arya-center
+          install -D -m 0644 apps/arya-center/arya-center.desktop config/includes.chroot/usr/share/applications/arya-center.desktop
+          install -D -m 0644 apps/arya-center/arya-center.desktop config/includes.chroot/etc/skel/Desktop/arya-center.desktop
+          install -D -m 0644 config/includes.chroot/usr/share/icons/hicolor/scalable/apps/arya-center.svg config/includes.chroot/usr/share/icons/hicolor/scalable/apps/arya-center.svg
+          python3 -m py_compile apps/arya-center/arya_center.py
+          echo "Arya Center staged and Python syntax validated."
 
       - name: Install Debian Trixie live-build and BIOS bootloader dependencies
         shell: bash
