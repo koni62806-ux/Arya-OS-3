@@ -31,10 +31,26 @@ class AryaImageConfigurationTests(unittest.TestCase):
         self.assertIn("Exec=plank", plank)
         self.assertIn("Exec=arya-tool-launcher", assistant)
 
-    def test_gaming_mode_is_staged(self):
+    def test_gaming_mode_supports_arguments(self):
         app = (ROOT / "apps/arya-gaming/arya_gaming.py").read_text()
         self.assertIn("gamemoderun", app)
+        self.assertIn("shlex.split", app)
+        self.assertIn('"--"] + command', app)
         self.assertIn("Arya Gaming", (ROOT / "apps/arya-gaming/arya-gaming.desktop").read_text())
+
+    def test_arya_tool_edge_launcher_opens_half_screen_panel(self):
+        app = (ROOT / "apps/arya-tool/arya_tool.py").read_text()
+        launcher = (ROOT / "apps/arya-tool/arya_tool_launcher.py").read_text()
+        self.assertIn("ARYA_TOOL_PANEL", app)
+        self.assertIn("self.panel_width", app)
+        self.assertIn('env["ARYA_TOOL_PANEL"] = "1"', launcher)
+
+    def test_tor_browser_uses_isolated_firefox_profile(self):
+        app = (ROOT / "apps/arya-connect/arya_connect.py").read_text()
+        self.assertIn("firefox-tor-profile", app)
+        self.assertIn("network.proxy.socks_remote_dns", app)
+        self.assertIn("media.peerconnection.enabled", app)
+        self.assertIn("firefox-esr", app)
 
 
 if __name__ == "__main__":
