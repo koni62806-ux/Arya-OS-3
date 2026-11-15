@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Arya Connect
+Comment=Manage the Tor privacy connection
+Exec=arya-connect
+Icon=network-vpn
+Terminal=false
+Categories=Network;Security;
+StartupNotify=true
