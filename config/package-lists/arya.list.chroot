@@ -39,3 +39,7 @@ xfce4-whiskermenu-plugin
 xfce4-pulseaudio-plugin
 papirus-icon-theme
 arc-theme
+# Censorship-circumvention foundation: Tor client and volunteer Snowflake transport.
+tor
+snowflake-client
+obfs4proxy
