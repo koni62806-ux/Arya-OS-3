@@ -18,7 +18,7 @@ from pathlib import Path
 
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GdkPixbuf, GLib
+from gi.repository import Gtk, GdkPixbuf, GLib, Gdk
 
 APP_NAME = "Arya Tool"
 CONFIG_DIR = Path.home() / ".config" / "arya-tool"
@@ -73,8 +73,22 @@ class AryaTool(Gtk.Application):
         self.window.set_default_size(760, 680)
         self.window.set_position(Gtk.WindowPosition.CENTER)
         self.window.set_border_width(0)
+        self.panel_mode = os.environ.get("ARYA_TOOL_PANEL") == "1"
+        if self.panel_mode:
+            screen = Gdk.Screen.get_default()
+            monitor = screen.get_primary_monitor()
+            self.panel_geometry = screen.get_monitor_geometry(monitor)
+            self.panel_width = max(520, self.panel_geometry.width // 2)
+            self.window.set_default_size(self.panel_width, self.panel_geometry.height)
+            self.window.set_decorated(False)
+            self.window.set_keep_above(True)
+            self.window.connect("realize", self.position_panel)
         self.build_ui()
         self.window.show_all()
+
+    def position_panel(self, *_):
+        rect = self.panel_geometry
+        self.window.move(rect.x + rect.width - self.panel_width, rect.y)
 
     def build_ui(self):
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -97,6 +111,11 @@ class AryaTool(Gtk.Application):
         settings_btn = Gtk.Button(label="تنظیمات")
         settings_btn.connect("clicked", self.open_settings)
         header.pack_end(settings_btn, False, False, 0)
+        if self.panel_mode:
+            close_btn = Gtk.Button(label="×")
+            close_btn.set_tooltip_text("بستن پنل")
+            close_btn.connect("clicked", lambda *_: self.window.destroy())
+            header.pack_end(close_btn, False, False, 0)
         root.pack_start(header, False, False, 0)
 
         self.mode_label = Gtk.Label()
@@ -184,9 +203,14 @@ class AryaTool(Gtk.Application):
             path = self.attachment
             mime = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
             if mime.startswith("image/"):
-                raw = base64.b64encode(path.read_bytes()).decode("ascii")
-                content = [{"type": "text", "text": text or "این تصویر را بررسی کن."},
-                           {"type": "image_url", "image_url": {"url": "data:{};base64,{}".format(mime, raw)}}]
+                try:
+                    if path.stat().st_size > 8 * 1024 * 1024:
+                        raise ValueError("حجم تصویر بیشتر از ۸ مگابایت است.")
+                    raw = base64.b64encode(path.read_bytes()).decode("ascii")
+                    content = [{"type": "text", "text": text or "این تصویر را بررسی کن."},
+                               {"type": "image_url", "image_url": {"url": "data:{};base64,{}".format(mime, raw)}}]
+                except (OSError, ValueError) as exc:
+                    content = (text + "\nپیوست تصویر خوانده نشد: " + str(exc)).strip()
             elif mime.startswith("text/") or path.suffix.lower() in (".log", ".py", ".sh", ".md", ".txt", ".yml", ".yaml", ".json"):
                 try:
                     excerpt = path.read_text(encoding="utf-8", errors="replace")[:16000]
@@ -218,7 +242,9 @@ class AryaTool(Gtk.Application):
             self.messages.append({"role": "assistant", "content": answer})
             GLib.idle_add(self.finish_answer, answer)
         except Exception as exc:
-            GLib.idle_add(self.finish_answer, "اتصال به مدل برقرار نشد: {}\n\nبرای حالت آنلاین، آدرس مدل و کلید API را بررسی کن. در حالت محلی نیز باید سرویس سازگار با OpenAI روی دستگاه اجرا باشد.".format(exc))
+            message = "اتصال به مدل برقرار نشد: {}\n\nبرای حالت آنلاین، آدرس مدل و کلید API را بررسی کن. در حالت محلی نیز باید سرویس سازگار با OpenAI روی دستگاه اجرا باشد.".format(exc)
+            self.messages.append({"role": "assistant", "content": message})
+            GLib.idle_add(self.finish_answer, message)
 
     def request_endpoint(self, which):
         url = self.config.get(which + "_url", DEFAULTS[which + "_url"]).rstrip("/")
